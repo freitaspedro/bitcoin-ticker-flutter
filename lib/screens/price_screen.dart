@@ -17,12 +17,13 @@ class _PriceScreenState extends State<PriceScreen> {
   @override
   void initState() {
     super.initState();
-    updateUI();
+    updateUI(selectedCurrency);
   }
 
-  void updateUI() async {
-    var coinData = await coin.getCoinData();
+  void updateUI(String currency) async {
+    var coinData = await coin.getCoinData(currency);
     setState(() {
+      selectedCurrency = currency;
       if (coinData == null) {
         rate = '?';
         return;
@@ -31,7 +32,6 @@ class _PriceScreenState extends State<PriceScreen> {
       rate = r.toInt().toString();
     });
   }
-
 
   DropdownButton<String> androidDropdown() {
     List<DropdownMenuItem<String>> dropdownItems = [];
@@ -46,9 +46,7 @@ class _PriceScreenState extends State<PriceScreen> {
         value: selectedCurrency,
         items: dropdownItems,
         onChanged: (value) {
-          setState(() {
-            selectedCurrency = value;
-          });
+          updateUI(value);
         },
       );
   }
@@ -61,9 +59,7 @@ class _PriceScreenState extends State<PriceScreen> {
     return CupertinoPicker(
       itemExtent: 32.0,
       onSelectedItemChanged: (int selectedItem) {
-        setState(() {
-          selectedCurrency = currenciesList[selectedItem];
-        });
+        updateUI(currenciesList[selectedItem]);
       },
       children: pickerItems,
     );
@@ -95,7 +91,7 @@ class _PriceScreenState extends State<PriceScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
                 child: Text(
-                  '1 BTC = $rate USD',
+                  '1 BTC = $rate $selectedCurrency',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.0,
