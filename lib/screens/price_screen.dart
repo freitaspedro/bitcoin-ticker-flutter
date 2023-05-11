@@ -1,8 +1,7 @@
-import 'package:bitcoin_ticker/services/coin_data.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-
-import '../components/crypto_card.dart';
+import 'package:bitcoin_ticker/services/coin_data.dart';
+import 'package:bitcoin_ticker/components/crypto_card.dart';
 
 class PriceScreen extends StatefulWidget {
   @override
@@ -11,37 +10,7 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
 
-  CoinData coin = CoinData();
-
-  String selectedCurrency = 'USD';
-  String btcRate;
-  String ethRate;
-  String ltcRate;
-
-  @override
-  void initState() {
-    super.initState();
-    updateUI(selectedCurrency);
-  }
-
-  void updateUI(String currency) async {
-    final btcCoinData = await coin.getBTCCoinData(currency);
-    final ethCoinData = await coin.getETHCoinData(currency);
-    final ltcCoinData = await coin.getLTCCoinData(currency);
-    setState(() {
-      selectedCurrency = currency;
-      if (btcCoinData == null || ethCoinData == null || ltcCoinData == null) {
-        btcRate = ethRate = ltcRate = '?';
-        return;
-      }
-      double btcR = btcCoinData['rate'];
-      btcRate = btcR.toInt().toString();
-      double ethR = ethCoinData['rate'];
-      ethRate = ethR.toInt().toString();
-      double ltcR = ltcCoinData['rate'];
-      ltcRate = ltcR.toInt().toString();
-    });
-  }
+  String selectedCurrency = 'AUD';
 
   DropdownButton<String> androidDropdown() {
     List<DropdownMenuItem<String>> dropdownItems = [];
@@ -56,7 +25,8 @@ class _PriceScreenState extends State<PriceScreen> {
         value: selectedCurrency,
         items: dropdownItems,
         onChanged: (value) {
-          updateUI(value);
+          selectedCurrency = value;
+          getData();
         },
       );
   }
@@ -69,7 +39,10 @@ class _PriceScreenState extends State<PriceScreen> {
     return CupertinoPicker(
       itemExtent: 32.0,
       onSelectedItemChanged: (int selectedItem) {
-        updateUI(currenciesList[selectedItem]);
+        setState(() {
+          selectedCurrency = currenciesList[selectedItem];
+          getData();
+        });
       },
       children: pickerItems,
     );
@@ -78,6 +51,45 @@ class _PriceScreenState extends State<PriceScreen> {
   Widget getPicker() {
     return (Theme.of(context).platform == TargetPlatform.iOS)
         ? iOSPicker() : androidDropdown();
+  }
+
+  Map<String, String> coinValues = {};
+  bool isWaiting = false;
+
+  void getData() async {
+    isWaiting = true;
+    try {
+      var data = await CoinData().getCoinData(selectedCurrency);
+      isWaiting = false;
+      setState(() {
+        coinValues = data;
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getData();
+  }
+
+  Column makeCards() {
+    List<CryptoCard> cryptoCards = [];
+    for (String crypto in cryptoList) {
+      cryptoCards.add(
+        CryptoCard(
+          cryptoCurrency: crypto,
+          selectedCurrency: selectedCurrency,
+          value: isWaiting ? '?' : coinValues[crypto],
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: cryptoCards,
+    );
   }
 
   @override
@@ -90,27 +102,7 @@ class _PriceScreenState extends State<PriceScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              CryptoCard(
-                  crypto: 'BTC',
-                  rate: btcRate,
-                  selectedCurrency: selectedCurrency
-              ),
-              CryptoCard(
-                  crypto: 'ETH',
-                  rate: ethRate,
-                  selectedCurrency: selectedCurrency
-              ),
-              CryptoCard(
-                  crypto: 'LTC',
-                  rate: ltcRate,
-                  selectedCurrency: selectedCurrency
-              ),
-            ],
-          ),
+          makeCards(),
           Container(
             height: 150.0,
             alignment: Alignment.center,

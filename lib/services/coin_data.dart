@@ -31,29 +31,24 @@ const List<String> cryptoList = [
 ];
 
 const apiKey = 'B0D2B546-F169-4912-AABC-C6767B63A8EE';
-const coinApiIoURL = 'https://rest.coinapi.io/v1/exchangerate';
+const coinApiURL = 'https://rest.coinapi.io/v1/exchangerate';
 
 class CoinData {
 
-  Future<dynamic> getBTCCoinData(String currency) async {
-    String url = '$coinApiIoURL/BTC/$currency?apikey=$apiKey';
-    NetworkHelper networkHelper = NetworkHelper(url);
-    var coinData = await networkHelper.getData();
-    return coinData;
-  }
-
-  Future<dynamic> getETHCoinData(String currency) async {
-    String url = '$coinApiIoURL/ETH/$currency?apikey=$apiKey';
-    NetworkHelper networkHelper = NetworkHelper(url);
-    var coinData = await networkHelper.getData();
-    return coinData;
-  }
-
-  Future<dynamic> getLTCCoinData(String currency) async {
-    String url = '$coinApiIoURL/LTC/$currency?apikey=$apiKey';
-    NetworkHelper networkHelper = NetworkHelper(url);
-    var coinData = await networkHelper.getData();
-    return coinData;
+  Future getCoinData(String currency) async {
+    Map<String, String> cryptoPrices = {};
+    for (String crypto in cryptoList) {
+      String url = '$coinApiURL/$crypto/$currency?apikey=$apiKey';
+      NetworkHelper networkHelper = NetworkHelper(url);
+      var coinData = await networkHelper.getData();
+      try {
+        double price = coinData['rate'];
+        cryptoPrices[crypto] = price.toStringAsFixed(0);
+      } catch (e) {
+        print(e);
+      }
+    }
+    return cryptoPrices;
   }
 
 }
