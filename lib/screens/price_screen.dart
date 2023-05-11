@@ -2,6 +2,8 @@ import 'package:bitcoin_ticker/services/coin_data.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import '../components/crypto_card.dart';
+
 class PriceScreen extends StatefulWidget {
   @override
   _PriceScreenState createState() => _PriceScreenState();
@@ -12,7 +14,9 @@ class _PriceScreenState extends State<PriceScreen> {
   CoinData coin = CoinData();
 
   String selectedCurrency = 'USD';
-  String rate;
+  String btcRate;
+  String ethRate;
+  String ltcRate;
 
   @override
   void initState() {
@@ -21,15 +25,21 @@ class _PriceScreenState extends State<PriceScreen> {
   }
 
   void updateUI(String currency) async {
-    var coinData = await coin.getCoinData(currency);
+    final btcCoinData = await coin.getBTCCoinData(currency);
+    final ethCoinData = await coin.getETHCoinData(currency);
+    final ltcCoinData = await coin.getLTCCoinData(currency);
     setState(() {
       selectedCurrency = currency;
-      if (coinData == null) {
-        rate = '?';
+      if (btcCoinData == null || ethCoinData == null || ltcCoinData == null) {
+        btcRate = ethRate = ltcRate = '?';
         return;
       }
-      double r = coinData['rate'];
-      rate = r.toInt().toString();
+      double btcR = btcCoinData['rate'];
+      btcRate = btcR.toInt().toString();
+      double ethR = ethCoinData['rate'];
+      ethRate = ethR.toInt().toString();
+      double ltcR = ltcCoinData['rate'];
+      ltcRate = ltcR.toInt().toString();
     });
   }
 
@@ -80,26 +90,26 @@ class _PriceScreenState extends State<PriceScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Padding(
-            padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
-            child: Card(
-              color: Colors.lightBlueAccent,
-              elevation: 5.0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10.0),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              CryptoCard(
+                  crypto: 'BTC',
+                  rate: btcRate,
+                  selectedCurrency: selectedCurrency
               ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
-                child: Text(
-                  '1 BTC = $rate $selectedCurrency',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20.0,
-                    color: Colors.white,
-                  ),
-                ),
+              CryptoCard(
+                  crypto: 'ETH',
+                  rate: ethRate,
+                  selectedCurrency: selectedCurrency
               ),
-            ),
+              CryptoCard(
+                  crypto: 'LTC',
+                  rate: ltcRate,
+                  selectedCurrency: selectedCurrency
+              ),
+            ],
           ),
           Container(
             height: 150.0,
