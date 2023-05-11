@@ -1,4 +1,4 @@
-import 'package:bitcoin_ticker/coin_data.dart';
+import 'package:bitcoin_ticker/services/coin_data.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -9,7 +9,29 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
 
+  CoinData coin = CoinData();
+
   String selectedCurrency = 'USD';
+  String rate;
+
+  @override
+  void initState() {
+    super.initState();
+    updateUI();
+  }
+
+  void updateUI() async {
+    var coinData = await coin.getCoinData();
+    setState(() {
+      if (coinData == null) {
+        rate = '?';
+        return;
+      }
+      double r = coinData['rate'];
+      rate = r.toInt().toString();
+    });
+  }
+
 
   DropdownButton<String> androidDropdown() {
     List<DropdownMenuItem<String>> dropdownItems = [];
@@ -73,7 +95,7 @@ class _PriceScreenState extends State<PriceScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
                 child: Text(
-                  '1 BTC = ? USD',
+                  '1 BTC = $rate USD',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.0,
